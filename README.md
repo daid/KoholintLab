@@ -20,6 +20,7 @@ This works in a multi step process:
 
 ### 1. Export room data into json
 `$ python3 mapeditor.py map.json ../LADX-Disassembly/ --from-disasm`
+Only do this once. Afterwords, keep using the same map.json file. I recommend checking in your map.json into a git repository to track changes.
 
 ### 2. Edit room data
 `$ python3 mapeditor.py map.json ../LADX-Disassembly/ --edit`
