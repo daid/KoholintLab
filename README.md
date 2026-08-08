@@ -17,3 +17,14 @@ This works in a multi step process:
 1. Export the room data into json (you only do this once, as this is not perfect)
 2. Edit the json data with the editor
 3. Import the json back into the disassembly
+
+### 1. Export room data into json
+`$ python3 mapeditor.py map.json ../LADX-Disassembly/ --from-disasm`
+
+### 2. Edit room data
+`$ python3 mapeditor.py map.json ../LADX-Disassembly/ --edit`
+Then open a browser to http://127.0.0.1:8000/
+
+### 3. Import room data into disassembly
+`$ python3 mapeditor.py map.json ../LADX-Disassembly/ --to-disasm`
+Next build the disassembly and see your changes.
