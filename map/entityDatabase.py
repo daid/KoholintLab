@@ -515,7 +515,7 @@ SPRITE_DATA = {
     0x18: (3, 0x93), # POLS_VOICE
     0x19: lambda room_id: (2, 0x90) if room_id in _CAVES_B_ROOMS else (0, 0x90), # KEESE
     0x1A: (0, {0x90, 0x77}), # STALFOS_AGGRESSIVE
-    0x1B: None,      # GEL
+    0x1B: (1, 0x91), # GEL
     0x1C: (1, 0x91), # MINI_GEL
     0x1E: (0, {0x90, 0x77}), # STALFOS_EVASIVE
     0x1F: lambda room_id: (0, 0x77) if 0x230 <= room_id <= 0x26B else (0, 0x90, 3, 0x93), # GIBDO
@@ -544,7 +544,7 @@ SPRITE_DATA = {
     0x3E: lambda room_id: (0, 0x8D, 2, 0x8F) if room_id == 0x2A3 else (2, 0xE6), # MARIN
     0x3F: lambda room_id: (1, 0x8E, 3, 0x6A) if room_id == 0x2A3 else (1, 0x6C, 3, 0xC8), # RACOON
     0x40: (2, 0xA3), # WITCH
-    0x41: None,      # OWL_EVENT
+    0x41: (3, {0x8C, 0xA2}),      # OWL_EVENT
     0x42: lambda room_id: (1, 0xD5) if room_id == 0x26F else (1, 0x91), # OWL_STATUE
     0x43: None,      # SEASHELL_MANSION_TREES
     0x44: None,      # YARNA_TALKING_BONES
@@ -624,7 +624,7 @@ SPRITE_DATA = {
     0x98: (2, 0x5e), # HORSE_PIECE
     0x99: (3, 0x60), # WATER_TEKTITE
     0x9A: lambda room_id: (0, 0x66) if 0x200 <= room_id <= 0x22F else (0, 0xa6), # FLYING_TILES
-    0x9B: None,      # HIDING_GEL
+    0x9B: (1, 0x91), # HIDING_GEL
     0x9C: (3, 0x60), # STAR
     0x9D: (0, 0xa6), # LIFTABLE_STATUE
     0x9E: None,      # FIREBALL_SHOOTER
@@ -654,7 +654,7 @@ SPRITE_DATA = {
     0xB7: (3, 0x71), # MERMAID
     0xB8: (1, 0xa1, 2, 0x75, 3, 0x4e), # FISHERMAN_UNDER_BRIDGE
     0xB9: (2, 0x79), # BUZZ_BLOB
-    0xBA: (3, 0x76), # BOMBER
+    0xBA: (3, {0x76, 0xA2}), # BOMBER
     0xBB: (3, 0x76), # BUSH_CRAWLER
     0xBC: (2, 0xa9), # GRIM_CREEPER
     0xBD: (2, 0x7a), # VIRE
