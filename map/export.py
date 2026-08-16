@@ -109,12 +109,15 @@ def _export_spritesheet_tables(basepath, data) -> bool:
     for idx in range(len(index_table)):
         if str(idx) not in data:
             continue
-        entities = {e['id'] for e in data[str(idx)]["entities"]}
+        room = data[str(idx)]
+        entities = {e['id'] for e in room["entities"]}
         table = [None] * 4
         source = [None] * 4
         if idx < 0x100:
             table[0] = {0xA4}  # Overworld always loads bowwow in first slot, but can replace it with followers
             source[0] = 0x6D
+        if room["chestitem"] == 0x22: # Zol chest
+            entities.add(0x1B)
         for eid in entities:
             sprite_data = entityDatabase.SPRITE_DATA[eid]
             if callable(sprite_data):
