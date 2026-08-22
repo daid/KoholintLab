@@ -292,6 +292,18 @@ def _sanity_check(data):
             if room["entities"]:
                 print(f"Room {display_key} is an Alt room, and Alt rooms should not have entities.")
                 result = False
+        elif (room["map_id"] == -1 or room["map_id"] >= 11) and room["map_id"] != 0xFF:
+            # room position should match ID
+            if room["x"] != int(key) % 16 or room["y"] != (int(key) // 16) & 0x0F:
+                print(f"Room {display_key} is at the wrong position ({room["x"]}, {room["y"]} != {int(key) % 16}, {(int(key) // 16) & 0x0F}). The map ({room["map_id"]} it is on does not allow moving rooms.")
+                result = False
+        else:
+            if room["x"] >= 8:
+                print(f"Room {display_key} is at an invalid position ({room["x"]}, {room["y"]}) for map {room["map_id"]}")
+                result = False
+            if room["y"] >= 8:
+                print(f"Room {display_key} is at an invalid position for map {room["map_id"]}.")
+                result = False
         pos_key = (room["map_id"], room["x"], room["y"])
         if pos_key in known_positions:
             print(f"Room {display_key} has the same position as {known_positions[pos_key]}.")

@@ -350,6 +350,8 @@ def room_data_to_json(basepath):
                 room_nr += 0x100
             if layout["id"] == 11:
                 room_nr += 0x100
+            if room_nr == 0x2FE: # Room 2FE is the banana sale indoors, which is in layout10, but loaded as map 16, so ignore it in the layout.
+                continue
             if room_nr not in room_pos:
                 room_pos[room_nr] = idx % 8, idx // 8
             if room_nr not in room_to_map_id:
@@ -361,13 +363,21 @@ def room_data_to_json(basepath):
     room_sidescroll[0x1FF] = True  # D4 boss
     room_sidescroll[0x2E8] = True  # D7 boss
     room_to_map_id[0x15D] = 1  # Empty unused D2 room
+    room_pos[0x15D] = (0, 0)
     room_to_map_id[0x17E] = 3  # Empty unused D4 room
+    room_pos[0x17E] = (0, 0)
     room_to_map_id[0x17F] = 3  # Empty unused D4 room
+    room_pos[0x17F] = (1, 0)
     room_to_map_id[0x1AD] = 4  # Empty unused D5 room
+    room_pos[0x1AD] = (0, 0)
     room_to_map_id[0x1AE] = 4  # Empty unused D5 room
+    room_pos[0x1AE] = (6, 0)
     room_to_map_id[0x1AF] = 4  # Empty unused D5 room
+    room_pos[0x1AF] = (7, 0)
     room_to_map_id[0x1DE] = 5  # Empty unused D6 room
+    room_pos[0x1DE] = (6, 0)
     room_to_map_id[0x1DF] = 5  # Empty unused D6 room
+    room_pos[0x1DF] = (7, 0)
     room_to_map_id[0x1E4] = room_to_map_id[0x1F4]  # Rooster cave
     room_to_map_id[0x1E6] = room_to_map_id[0x1E5]  # Swimming connector cave to mad batter
     room_to_map_id[0x1E8] = room_to_map_id[0x1F9]  # Desert heartpiece cave
@@ -377,6 +387,7 @@ def room_data_to_json(basepath):
     room_to_map_id[0x1FC] = room_to_map_id[0x1F0]  # Unused beta cave
 
     room_to_map_id[0x22f] = 6  # Empty unused D7 room
+    room_pos[0x22F] = (4, 0)
     room_to_map_id[0x233] = 7  # Empty unused D8 room
     room_pos[0x233] = (2, 0)
     room_to_map_id[0x236] = 7  # Empty unused D8 room
