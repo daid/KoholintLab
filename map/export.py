@@ -6,7 +6,11 @@ from . import entityDatabase
 
 def do_export(basepath, data):
     print(f"Exporting data to disassembly at {basepath}")
+    if not _sanity_check(data):
+        print("Sanity check failed, not storing in disasm")
+        return
     if not _export_spritesheet_tables(basepath, data):
+        print("Sprite sheet tables failed, not storing in disasm")
         return
     for filename, label_prefix, ids in [
         ("src/data/rooms/overworld_a.asm", "Overworld", list(range(0x000, 0x080)) + ["006Alt", "00EAlt", "01BAlt", "02BAlt", "079Alt"]),
@@ -273,4 +277,28 @@ def _encode_room_objects(room, all_rooms):
         map_id = target["map_id"] if warp_type else 0
         result += bytes([0xE0 | warp_type, map_id, warp["target"] & 0xFF, warp["target_x"], warp["target_y"]])
     result.append(0xFE)
+    return result
+
+def _sanity_check(data):
+    result = True
+    # Do a bunch of sanity checks on the data.
+    known_positions = {}
+    for key, room in data.items():
+        try:
+            display_key = f"0x{int(key):03x}"
+        except ValueError:
+            display_key = key
+        if key.endswith("Alt"):
+            if room["entities"]:
+                print(f"Room {display_key} is an Alt room, and Alt rooms should not have entities.")
+                result = False
+        pos_key = (room["map_id"], room["x"], room["y"])
+        if pos_key in known_positions:
+            print(f"Room {display_key} has the same position as {known_positions[pos_key]}.")
+            result = False
+        known_positions[pos_key] = display_key
+        if room["sidescroll"]:
+            if room["map_id"] == -1:
+                print(f"Cannot have an overworld sidescroll room: {display_key}")
+                result = False
     return result

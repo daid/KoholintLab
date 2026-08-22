@@ -374,11 +374,13 @@ def room_data_to_json(basepath):
     room_to_map_id[0x1E9] = room_to_map_id[0x1EA]  # D4 connector cave
     room_to_map_id[0x1F8] = room_to_map_id[0x1F9]  # Desert heartpiece cave
     room_to_map_id[0x1ED] = room_to_map_id[0x1EE]  # Unused fireball cave
-    room_to_map_id[0x1FC] = 0x11  # Unused beta cave
+    room_to_map_id[0x1FC] = room_to_map_id[0x1F0]  # Unused beta cave
 
     room_to_map_id[0x22f] = 6  # Empty unused D7 room
     room_to_map_id[0x233] = 7  # Empty unused D8 room
+    room_pos[0x233] = (2, 0)
     room_to_map_id[0x236] = 7  # Empty unused D8 room
+    room_pos[0x236] = (5, 0)
     room_to_map_id[0x26c] = room_to_map_id[0x28F]  # Unused armos temple room
     room_to_map_id[0x26d] = room_to_map_id[0x28F]  # Unused armos temple room
     room_to_map_id[0x26e] = room_to_map_id[0x28F]  # Unused armos temple room
