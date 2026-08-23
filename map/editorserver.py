@@ -15,23 +15,23 @@ from typing import Union
 
 
 MAP_NAMES = {
-    -1: "Overworld",
-    0: "D1", 1: "D2", 2: "D3", 3: "D4", 4: "D5", 5: "D6", 6: "D7", 7: "D8",
-    8: "EGG",
-    10: "CAVES_A",
-    14: "SHOP",
-    15: "MINIGAME",
-    16: "HOUSE",
-    17: "CAVES_B",
-    18: "DOGHOUSE",
-    19: "DREAM",
-    20: "CASTLE",
-    21: "MOBLIN_CAVE",
-    22: "ARMOS_SHRINE",
-    29: "LIBRARY",
-    30: "GHOST_HOUSE",
-    31: "CAVES_C",
-    255: "COLOR_DUNGEON"
+    -1: "-1: Overworld",
+    0: "0: D1", 1: "1: D2", 2: "2: D3", 3: "3: D4", 4: "4: D5", 5: "5: D6", 6: "6: D7", 7: "7: D8",
+    8: "8: EGG",
+    10: "10: CAVES_A",
+    14: "14: SHOP",
+    15: "15: MINIGAME",
+    16: "16: HOUSE",
+    17: "17: CAVES_B",
+    18: "18: DOGHOUSE",
+    19: "19: DREAM",
+    20: "20: CASTLE",
+    21: "21: MOBLIN_CAVE",
+    22: "22: ARMOS_SHRINE",
+    29: "29: LIBRARY",
+    30: "30: GHOST_HOUSE",
+    31: "31: CAVES_C",
+    255: "255: COLOR_DUNGEON"
 }
 OVERWORLD_TILESET_FILES = {
     0x1A: "src/gfx/world/ow_camera_shop.cgb.png",
