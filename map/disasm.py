@@ -449,6 +449,8 @@ def room_data_to_json(basepath):
             y = alt_room_y
             alt_room_y += 1
         roe = RoomObjectEditor(room)
+        if room_nr == 0x037: # The overworld room to the photo shop uses tile 61 for the top of the house, and this requires additional warp data, else we wrong warp.
+            roe.objects *= 2
         map_id = room_to_map_id.get(room_nr, 0x1F if room_nr < 0x200 else 0x11)
         if room_nr < 0x100:
             palette_index = palette_tables["OverworldPaletteMap"]["data"][room_nr]
