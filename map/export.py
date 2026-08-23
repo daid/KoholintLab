@@ -284,18 +284,20 @@ def _sanity_check(data):
     # Do a bunch of sanity checks on the data.
     known_positions = {}
     for key, room in data.items():
+        room_nr = None
         try:
-            display_key = f"0x{int(key):03x}"
+            room_nr = int(key)
+            display_key = f"0x{room_nr:03x}"
         except ValueError:
             display_key = key
         if key.endswith("Alt"):
             if room["entities"]:
                 print(f"Room {display_key} is an Alt room, and Alt rooms should not have entities.")
                 result = False
-        elif (room["map_id"] == -1 or room["map_id"] >= 11) and room["map_id"] != 0xFF:
+        elif (room["map_id"] == -1 or room["map_id"] >= 11) and room["map_id"] != 0xFF and room_nr is not None:
             # room position should match ID
-            if room["x"] != int(key) % 16 or room["y"] != (int(key) // 16) & 0x0F:
-                print(f"Room {display_key} is at the wrong position ({room["x"]}, {room["y"]} != {int(key) % 16}, {(int(key) // 16) & 0x0F}). The map ({room["map_id"]} it is on does not allow moving rooms.")
+            if room["x"] != room_nr % 16 or room["y"] != (room_nr // 16) & 0x0F:
+                print(f"Room {display_key} is at the wrong position ({room["x"]}, {room["y"]} != {room_nr % 16}, {(room_nr // 16) & 0x0F}). The map ({room["map_id"]} it is on does not allow moving rooms.")
                 result = False
         else:
             if room["x"] >= 8:
@@ -304,6 +306,23 @@ def _sanity_check(data):
             if room["y"] >= 8:
                 print(f"Room {display_key} is at an invalid position for map {room["map_id"]}.")
                 result = False
+        if room_nr is not None:
+            if room_nr < 0x100:
+                if room["map_id"] != -1:
+                    print(f"Room {display_key} on the wrong map, should be -1 (overworld).")
+                    result = False
+            elif room_nr < 0x200:
+                if room["map_id"] < 0x00 or 0x06 < room["map_id"] < 0x1A or room["map_id"] == 255:
+                    print(f"Room {display_key} on the wrong map, should be 0-6 (D1-D6) or > 25.")
+                    result = False
+            elif room_nr < 0x300:
+                if room["map_id"] < 0x06 or room["map_id"] >= 0x1A:
+                    print(f"Room {display_key} on the wrong map, should be in range 6-25.")
+                    result = False
+            else:
+                if room["map_id"] != 255:
+                    print(f"Room {display_key} on the wrong map, should be in color dungeon")
+                    result = False
         pos_key = (room["map_id"], room["x"], room["y"])
         if pos_key in known_positions:
             print(f"Room {display_key} has the same position as {known_positions[pos_key]}.")
