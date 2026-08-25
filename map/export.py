@@ -42,6 +42,24 @@ def do_export(basepath, data):
             f.write("  db " + ", ".join([f"${b:02X}" for b in data[str(room_id)]["tiles"]]) + "\n")
         f.close()
 
+    for filename, label_prefix, ids in [
+        ("src/data/entities/overworld.asm", "Overworld", list(range(0x000, 0x100))),
+        ("src/data/entities/indoors_a.asm", "IndoorsA", list(range(0x100, 0x200))),
+        ("src/data/entities/indoors_b.asm", "IndoorsB", list(range(0x200, 0x300))),
+        ("src/data/entities/color_dungeon.asm", "ColorDungeon", list(range(0x300, 0x320))),
+    ]:
+        f = open(os.path.join(basepath, filename), "wt")
+        for room_id in ids:
+            if isinstance(room_id, str):
+                f.write(f"{label_prefix}{room_id[1:]}Entities::\n")
+            else:
+                f.write(f"{label_prefix}{room_id&0xFF:02X}Entities::\n")
+            if str(room_id) in data:
+                for entity in data[str(room_id)]["entities"]:
+                    f.write(f"  entity {entity["y"]}, {entity["x"]}, {entity["id"]}\n")
+            f.write("  entities_end\n")
+        f.close()
+
     # TODO: Also support full overworld tileset table, not the limited 2x2 blocks (requires asm patches)
     f = open(os.path.join(basepath, "src/data/rooms_gfx/overworld_tileset_table.asm"), "wt")
     f.write("OverworldTilesetsTable::\n")
