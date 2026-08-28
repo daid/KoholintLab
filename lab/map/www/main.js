@@ -87,7 +87,7 @@ async function load_room_edit(room_id) {
         selected_tile = tileset_info[x + y * 16];
         selected_entity = undefined;
         document.getElementById("tile_attr").value = selected_tile.attr
-        info.innerText = JSON.stringify(selected_tile);
+        info.innerText = selected_tile.id.toString(16) + ": " + JSON.stringify(selected_tile);
         draw_tileset_image();
         draw_entities_image();
     };
@@ -138,6 +138,9 @@ async function load_room_edit(room_id) {
     } else {
         document.getElementById("content").appendChild(roomDataSelector("Tileset", "tileset", underworld_tileset_table));
         document.getElementById("content").appendChild(roomDataSelector("Animation", "animation", animation_table));
+        var attrib_div = document.createElement("div");
+        attrib_div.innerText = "Attrib: " + current_room["attribute_table"];
+        document.getElementById("content").appendChild(attrib_div);
         document.getElementById("content").appendChild(roomDataSelector("Event", "event", event_table));
         if (current_room.palette_index !== null)
             document.getElementById("content").appendChild(roomDataSelector("Palette", "palette_index", underworld_palette_index_table));
