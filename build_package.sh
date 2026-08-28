@@ -9,7 +9,7 @@ wget https://gnuwin32.sourceforge.net/downlinks/make-bin-zip.php -O make-bin.zip
 wget https://gnuwin32.sourceforge.net/downlinks/make-dep-zip.php -O make-dep.zip
 wget https://github.com/gbdev/rgbds/releases/download/v1.0.3/rgbds-win32.zip
 wget https://bootstrap.pypa.io/get-pip.py
-wget https://github.com/zladx/LADX-Disassembly/archive/refs/heads/main.zip -O disasm.zip
+wget https://github.com/daid/LADX-Disassembly/archive/refs/heads/HackBase.zip -O disasm.zip
 unzip make-bin.zip
 unzip make-dep.zip
 unzip rgbds-win32.zip
