@@ -32,7 +32,7 @@ class Tokenizer:
         ('CURADDR', r'@'),
         ('OP', r'(?:<=)|(?:>=)|(?:==)|(?:!=)|(?:<<)|(?:>>)|(?:&&)|(?:\|\|)|[+\-*/,\(\)<>&|\[\]{}=!~\^\%:;]'),
         ('SKIPNEWLINE', r'\\\n'),
-        ('NEWLINE', r'\n[ \t]*'),
+        ('NEWLINE', r'\n[ \t\n]*'),
         ('SKIP', r'[ \t]+'),
         ('MISMATCH', r'.'),
     ]))
@@ -51,8 +51,10 @@ class Tokenizer:
             value = m.group()
             match kind:
                 case "NEWLINE":
+                    newlines = value.count("\n")
+                    value = value[value.rfind("\n"):]
                     self.__tokens.append(Token("NEWLINE", len(value) - 1, line, column))
-                    line += 1
+                    line += newlines
                     column = 0
                 case "OP":
                     self.__tokens.append(Token(value, value, line, column))

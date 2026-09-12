@@ -1,4 +1,6 @@
 from tokenizer import ParseError
+import func
+import annotations
 import json
 
 
@@ -7,9 +9,14 @@ class EntityState:
         self.label = None
         self.index = None
         self.code = []
+        self._condition_counter = 0
     
     def append(self, code):
         self.code.append(code)
+    
+    def gen_condition_label(self) -> str:
+        self._condition_counter += 1
+        return f"{self._condition_counter:02X}"
 
 
 class CodeGen:
@@ -79,34 +86,65 @@ class CodeGen:
             state.append(f"  ; {node}")
             match node.kind:
                 case "call":
-                    function = node.params[0].get_identifier()
-                    if function == "dialog":
-                        message = node.params[1].get_string()
-                        state.append(f"  call_open_dialog {self.add_dialog(message)}")
-                        new_state = self.new_state()
-                        state.append(new_state)
-                        new_state.append(f"  ld a, [wDialogState]")
-                        new_state.append(f"  and a")
-                        new_state.append(f"  ret nz")
-                        state = new_state
-                    elif function == "giveItem":
-                        state.append("...")
-                    else:
+                    function = annotations.function_mapping.get(node.params[0].get_identifier().lower())
+                    if not function:
                         raise ParseError(node.token, f"Do not know how to compile: {node}")
+                    new_state = function(self, state, *node.params[1:])
+                    if new_state:
+                        state = new_state
                 case "if":
-                    state.append(f"IF {node.params[0]}")
+                    condition_label = state.gen_condition_label()
+                    condition_result = self._compile_condition(state, node.params[0])
+                    match condition_result:
+                        case "z":
+                            state.append(f"  jr nz, .false{condition_label}")
+                        case "!z":
+                            state.append(f"  jr z, .false{condition_label}")
+                        case _:
+                            raise ParseError(node.token, f"Internal compiler error: {condition_result} {node}")
                     true_end_state = self._compile(state, node.params[1])
-                    state.append("ELSE")
-                    false_end_state = self._compile(state, node.params[2])
-                    state.append(f"END {true_end_state} {false_end_state}")
-                    if true_end_state != state or false_end_state != state:
-                        state = self.new_state()
-                        true_end_state.append(state)
-                        false_end_state.append(state)
-                    # raise ParseError(node.token, f"Do not know how to compile: {node}")
+                    if len(node.params) == 2:
+                        state.append(f".false{condition_label}:")
+                        if true_end_state != state:
+                            new_state = self.new_state()
+                            state.append(new_state)
+                            true_end_state.append(new_state)
+                            state = new_state
+                    else:
+                        if true_end_state == state:
+                            state.append(f"  jr .true{condition_label}")
+                        state.append(f".false{condition_label}:")
+                        false_end_state = self._compile(state, node.params[2])
+                        if true_end_state == state:
+                            state.append(f".true{condition_label}:")
+                        if true_end_state != state or false_end_state != state:
+                            state = self.new_state()
+                            true_end_state.append(state)
+                            false_end_state.append(state)
                 case _:
                     raise ParseError(node.token, f"Do not know how to compile: {node}")
         return state
+
+    def _compile_condition(self, state, node):
+        if node.kind == "!":
+            res = self._compile_condition(state, node.params[0])
+            if res.startswith("!"):
+                return res[1:]
+            return f"!{res}"
+        elif node.kind == "call":
+            if node.params[0].get_identifier() == "hasItem":
+                item_id = node.params[1].get_identifier()
+                state.append(f"  ld hl, wInventoryItems.BButtonSlot")
+                state.append(f"  ld d, INVENTORY_SLOT_COUNT")
+                state.append(f": ld a, [hl+]")
+                state.append(f"  cp {item_id}")
+                state.append(f"  jr z, :+")
+                state.append(f"  dec d")
+                state.append(f"  jr nz, :-")
+                state.append(f"  rla ; clear zero flag")
+                state.append(f": ; z set if item found")
+                return "z"
+        raise ParseError(node.token, f"Do not know how to compile: {node}")
 
     def output(self, code):
         print(code)
