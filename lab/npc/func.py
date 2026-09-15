@@ -18,3 +18,11 @@ def giveItem(generator, state, item_id):
     item_id = item_id.get_identifier()
     state.append(f"  ld   d, {item_id}")
     state.append(f"  call GiveInventoryItem_trampoline")
+
+@function()
+def lookAtLink(generator, state):
+    state.append(f"  call GetEntityDirectionToLink_{generator.bank_nr:02X}")
+    state.append(f"  ld   hl, wEntitiesDirectionTable")
+    state.append(f"  add  hl, bc")
+    state.append(f"  ld   [hl], e")
+    state.append(f"  call SetEntityVariantForDirection_{generator.bank_nr:02X}")

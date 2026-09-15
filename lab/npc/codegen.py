@@ -4,6 +4,12 @@ import annotations
 import json
 
 
+CONSTANTS = {
+    "swordLevel": "wSwordLevel",
+    "shieldLevel": "wShieldLevel",
+}
+
+
 class EntityState:
     def __init__(self):
         self.label = None
@@ -69,6 +75,10 @@ class CodeGen:
                 else:
                     self.output(line)
 
+    @property
+    def bank_nr(self):
+        return self._npc.bank_nr
+
     def new_state(self):
         state = EntityState()
         state.label = f"{self._npc.name}State{len(self._states)}"
@@ -92,6 +102,10 @@ class CodeGen:
                     new_state = function(self, state, *node.params[1:])
                     if new_state:
                         state = new_state
+                case "=":
+                    result_reg = self._compile_value(state, node.params[1])
+                    result_target = self._compile_address(state, node.params[0])
+                    state.append(f"  ld [{result_target}], {result_reg}")
                 case "if":
                     condition_label = state.gen_condition_label()
                     condition_result = self._compile_condition(state, node.params[0])
@@ -144,6 +158,18 @@ class CodeGen:
                 state.append(f"  rla ; clear zero flag")
                 state.append(f": ; z set if item found")
                 return "z"
+        raise ParseError(node.token, f"Do not know how to compile: {node}")
+
+    def _compile_value(self, state, node):
+        if node.kind == "value" and node.token.kind == "NUMBER":
+            state.append(f"  ld a, {node.token.value}")
+            return "a"
+        raise ParseError(node.token, f"Do not know how to compile: {node}")
+
+    def _compile_address(self, state, node):
+        if node.kind == "value" and node.token.kind == "ID":
+            if node.token.value in CONSTANTS:
+                return CONSTANTS[node.token.value]
         raise ParseError(node.token, f"Do not know how to compile: {node}")
 
     def output(self, code):
