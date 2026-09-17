@@ -1,5 +1,5 @@
-from annotations import *
-from tokenizer import ParseError
+from .annotations import *
+from .tokenizer import ParseError
 
 
 @function()

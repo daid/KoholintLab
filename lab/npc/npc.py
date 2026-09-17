@@ -1,5 +1,5 @@
-import tokenizer
-import parser
+from . import tokenizer
+from . import parser
 
 
 class NPC:
@@ -70,7 +70,7 @@ if __name__ == "__main__":
             npc = NPC(arg)
             # for node in npc.oninteraction:
             #     node.dump()
-            codegen.CodeGen(npc)
+            codegen.CodeGen(npc, sys.stdout)
         except tokenizer.ParseError as e:
             print(f"Error: {e.message}")
             if e.token:

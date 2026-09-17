@@ -1,6 +1,6 @@
-from tokenizer import ParseError
-import func
-import annotations
+from .tokenizer import ParseError
+from . import func
+from . import annotations
 import json
 
 
@@ -26,8 +26,9 @@ class EntityState:
 
 
 class CodeGen:
-    def __init__(self, npc):
+    def __init__(self, npc, output_stream):
         self._npc = npc
+        self._output_stream = output_stream
         self._states = []
         self._dialogs = []
         
@@ -181,4 +182,7 @@ class CodeGen:
         raise ParseError(node.token, f"Do not know how to compile: {node}")
 
     def output(self, code):
-        print(code)
+        self._output_stream.write(code + "\n")
+
+    def get_dialog_labels(self):
+        return [f"{self._npc.name}Dialog{idx}" for idx, dialog in enumerate(self._dialogs)]

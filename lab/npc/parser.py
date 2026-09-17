@@ -1,4 +1,4 @@
-from tokenizer import Token, Tokenizer, ParseError
+from .tokenizer import Token, Tokenizer, ParseError
 from typing import Tuple, Dict, Callable, List, Optional
 
 
