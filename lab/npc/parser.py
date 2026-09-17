@@ -18,6 +18,11 @@ class AstNode:
             raise ParseError(self.token, f"Expected a string, got {self} instead")
         return self.token.value
 
+    def get_number(self) -> int:
+        if self.kind != "value" or self.token.kind != "NUMBER":
+            raise ParseError(self.token, f"Expected a number, got {self} instead")
+        return self.token.value
+
     def is_number(self):
         if self.kind != 'value':
             return False
@@ -48,7 +53,8 @@ class AstNode:
             if self.is_string():
                 return repr(self.token.value)
             return f"{self.token.value}"
-        return f"{self.kind}{self.params}"
+        params = ', '.join(("[...]" if isinstance(p, list) else repr(p)) for p in self.params)
+        return f"{self.kind}({params})"
 
 
 

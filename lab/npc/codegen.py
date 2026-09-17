@@ -31,14 +31,22 @@ class CodeGen:
         self._states = []
         self._dialogs = []
         
-        initial_state = self.new_state()
+        idle_state = self.new_state()
+        if npc.oninit:
+            state = self._compile(idle_state, npc.oninit)
+            idle_state = self.new_state('Idle')
+            state.append(idle_state)
+        if npc.onidle:
+            post_idle_state = self._compile(idle_state, npc.onidle)
+            if post_idle_state != idle_state:
+                raise ParseError(npc.onidle[-1], f"onidle scripts do not allow blocking operations")
         if npc.oninteraction:
-            initial_state.append(f"  call ShouldLinkTalkToEntity_{npc.bank_nr:02X}")
-            initial_state.append(f"  ret nc")
-            state = self._compile(initial_state, npc.oninteraction)
-            state.append(initial_state)
+            idle_state.append(f"  call ShouldLinkTalkToEntity_{npc.bank_nr:02X}")
+            idle_state.append(f"  ret nc")
+            state = self._compile(idle_state, npc.oninteraction)
+            state.append(idle_state)
         else:
-            initial_state.append(f"ret")
+            idle_state.append(f"ret")
         
         self.output("; Generated with KoholintLab Entity generator")
         self.output(f"; {npc.name} in bank {npc.bank_nr:02X}")
@@ -79,9 +87,9 @@ class CodeGen:
     def bank_nr(self):
         return self._npc.bank_nr
 
-    def new_state(self):
+    def new_state(self, label=''):
         state = EntityState()
-        state.label = f"{self._npc.name}State{len(self._states)}"
+        state.label = f"{self._npc.name}State{len(self._states)}{label}"
         state.index = len(self._states)
         self._states.append(state)
         return state

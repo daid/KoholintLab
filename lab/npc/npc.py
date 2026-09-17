@@ -11,6 +11,8 @@ class NPC:
         self.entry_point = None
         self.graphics = []
         self.sprites = []
+        self.oninit = None
+        self.onidle = None
         self.oninteraction = None
         self.read_file(filename)
 
@@ -42,6 +44,10 @@ class NPC:
                     attr_a = tok.expect("NUMBER").value
                     attr_b = tok.expect("NUMBER").value
                     self.sprites.append((tile_a, tile_b, attr_a, attr_b))
+                case "oninit":
+                    self.oninit = parser.parse_block(tok)
+                case "onidle":
+                    self.onidle = parser.parse_block(tok)
                 case "oninteraction":
                     self.oninteraction = parser.parse_block(tok)
                 case _:
