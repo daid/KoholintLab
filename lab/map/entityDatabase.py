@@ -713,3 +713,30 @@ SPRITE_DATA = {
     0xF9: (0, 0x11, 2, 0x10), # HARDHIT_BEETLE
     0xFA: lambda room_id: (0, 0x44) if room_id == 0x2F5 else None, # PHOTOGRAPHER
 }
+
+def buildGfxTableEntry(room_nr: int, entities: set):
+    table = [None] * 4
+    source = [None] * 4
+    if room_nr < 0x100:
+        table[0] = {0xA4}  # Overworld always loads bowwow in first slot, but can replace it with followers
+        source[0] = 0x6D
+    for eid in entities:
+        sprite_data = SPRITE_DATA[eid]
+        if callable(sprite_data):
+            sprite_data = sprite_data(room_nr)
+        if sprite_data is None:
+            continue
+        for n in range(0, len(sprite_data), 2):
+            target_idx = sprite_data[n]
+            graphics_sheets = sprite_data[n + 1]
+            if isinstance(graphics_sheets, int):
+                graphics_sheets = {graphics_sheets}
+            if table[target_idx] is None:
+                table[target_idx] = graphics_sheets
+                source[target_idx] = eid
+            if not table[target_idx].intersection(graphics_sheets):
+                return f"Conflict between {NAME[source[target_idx]]} and {NAME[eid]}"
+            else:
+                table[target_idx] = table[target_idx].intersection(graphics_sheets)
+    table = tuple(0xFF if gs is None else sorted(gs)[0] for gs in table)
+    return table

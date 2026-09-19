@@ -110,6 +110,7 @@ ITEM_TILESET_FILES = {
     "HIGH(HouseAItemsTiles)": "src/gfx/items/house_a.cgb.png",
     "HIGH(Npc3Tiles + $2300)": "src/gfx/characters/oam_npc_3.cgb.png", # Only referenced by MAP_09_UNUSED
 }
+ENTITY_SPRITE_FILES = ["src/gfx/characters/oam_color_dungeon.png", "src/gfx/characters/oam_npc_2.cgb.png", "src/gfx/characters/oam_npc_1.cgb.png", "src/gfx/characters/oam_npc_3.cgb.png"]
 
 def draw_text(image, x, y, s):
     draw = PIL.ImageDraw.Draw(image)
@@ -347,6 +348,22 @@ class EditorServer(http.server.ThreadingHTTPServer):
             if x == 16:
                 x = 0
                 y += 1
+        
+        entities = {e["id"] for e in room["entities"]}
+        table = entityDatabase.buildGfxTableEntry(room_id, entities)
+        if not isinstance(table, str):
+            for row, gfx_nr in enumerate(table):
+                if gfx_nr == 255:
+                    continue
+                filename = ENTITY_SPRITE_FILES[gfx_nr>>6]
+                index = (gfx_nr & 0x3F)
+                for n in range(0, 8):
+                    tx = (index*8+n) % 8
+                    ty = (index*8+n) // 8
+                    self.draw_tile(result, n * 8+row*64, 240, (filename, tx + ty * 16), 1, "ObjectPalettes", sprite=True)
+                    self.draw_tile(result, n * 8+row*64, 248, (filename, tx + ty * 16+8), 1, "ObjectPalettes", sprite=True)
+        else:
+            draw_text(result, 0, 240, table)
 
         draw = PIL.ImageDraw.Draw(result)
         for idx, pal in enumerate(self._palette_colors[palette]["data"]):
@@ -397,7 +414,7 @@ class EditorServer(http.server.ThreadingHTTPServer):
             gfx_nr = sd[gfx_idx]
             if isinstance(gfx_nr, set):
                 gfx_nr = list(sorted(gfx_nr))[0]
-            filename = ["src/gfx/characters/oam_color_dungeon.png", "src/gfx/characters/oam_npc_2.cgb.png", "src/gfx/characters/oam_npc_1.cgb.png", "src/gfx/characters/oam_npc_3.cgb.png"][gfx_nr >> 6]
+            filename = ENTITY_SPRITE_FILES[gfx_nr >> 6]
             index = (gfx_nr & 0x3F)
             for n in range(0, 8):
                 tx = (index*8+n) % 8

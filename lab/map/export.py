@@ -159,49 +159,25 @@ def _export_spritesheet_tables(basepath, data) -> bool:
     overworld_table = []
     indoor_table = []
     index_table = [0] * 0x320
-    result = True
     for idx in range(len(index_table)):
         if str(idx) not in data:
             continue
         room = data[str(idx)]
         entities = {e['id'] for e in room["entities"]}
-        table = [None] * 4
-        source = [None] * 4
-        if idx < 0x100:
-            table[0] = {0xA4}  # Overworld always loads bowwow in first slot, but can replace it with followers
-            source[0] = 0x6D
         if room["chestitem"] == 0x22: # Zol chest
             entities.add(0x1B)
-        for eid in entities:
-            sprite_data = entityDatabase.SPRITE_DATA[eid]
-            if callable(sprite_data):
-                sprite_data = sprite_data(idx)
-            if sprite_data is None:
-                continue
-            for n in range(0, len(sprite_data), 2):
-                target_idx = sprite_data[n]
-                graphics_sheets = sprite_data[n + 1]
-                if isinstance(graphics_sheets, int):
-                    graphics_sheets = {graphics_sheets}
-                if table[target_idx] is None:
-                    table[target_idx] = graphics_sheets
-                    source[target_idx] = eid
-                if not table[target_idx].intersection(graphics_sheets):
-                    print(f"Failed to setup sprite graphics. Conflict in room {idx:03x}")
-                    print(f"Conflict between {entityDatabase.NAME[source[target_idx]]} and {entityDatabase.NAME[eid]}")
-                    result = False
-                else:
-                    table[target_idx] = table[target_idx].intersection(graphics_sheets)
-        table = tuple(0xFF if gs is None else sorted(gs)[0] for gs in table)
+        table = entityDatabase.buildGfxTableEntry(idx, entities)
+        if isinstance(table, str):
+            print(f"Failed to setup sprite graphics. Conflict in room {idx:03x}")
+            print(table)
+            return False
         target_table = overworld_table if idx < 0x100 else indoor_table
         if table not in target_table:
             target_table.append(table)
             if len(target_table) >= 0xFF:
                 print("Failed to setup sprite graphics tables, overflowed table size...")
-                result = False
+                return False
         index_table[idx] = target_table.index(table)
-    if not result:
-        return result
     f = ExportFile(os.path.join(basepath, "src/data/rooms_gfx/room_spritesheet_tables.asm"))
     f.add_data("RoomSpritesheetGroupsTable", bytes(index_table))
     f.finish()
@@ -212,7 +188,7 @@ def _export_spritesheet_tables(basepath, data) -> bool:
     for row in indoor_table:
         f.file.write(f"  db ${row[0]:02X}, ${row[1]:02X}, ${row[2]:02X}, ${row[3]:02X}\n")
     f.close()
-    return result
+    return True
 
 
 def _encode_room_objects(room, all_rooms):
