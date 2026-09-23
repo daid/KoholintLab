@@ -7,6 +7,25 @@ import json
 CONSTANTS = {
     "swordLevel": "wSwordLevel",
     "shieldLevel": "wShieldLevel",
+    "linkX": "hLinkPositionX",
+    "linkY": "hLinkPositionY"
+}
+
+COMPARE_RESULT_LR = { # Which flags result in a "true" result on "cp L, R"
+    "==": "z",
+    "!=": "!z",
+    "<": "c",
+    ">": "!cz",
+    "<=": "cz",
+    ">=": "!c",
+}
+COMPARE_RESULT_RL = { # Which flags result in a "true" result on "cp R, L"
+    "==": "z",
+    "!=": "!z",
+    "<": "!cz",
+    ">": "c",
+    "<=": "!c",
+    ">=": "cz",
 }
 
 
@@ -118,10 +137,21 @@ class CodeGen:
                 case "if":
                     condition_label = state.gen_condition_label()
                     condition_result = self._compile_condition(state, node.params[0])
-                    match condition_result:
-                        case "z":
+                    match condition_result: # Turn a "true" condition into a "jump if false"
+                        case "z":   # a == x
                             state.append(f"  jr nz, .false{condition_label}")
-                        case "!z":
+                        case "!z":  # a != x
+                            state.append(f"  jr z, .false{condition_label}")
+                        case "c":   # a < x
+                            state.append(f"  jr nc, .false{condition_label}")
+                        case "!c":  # a >= x
+                            state.append(f"  jr c, .false{condition_label}")
+                        case "cz":  # a <= x
+                            state.append(f"  jr z, :+")
+                            state.append(f"  jr nc, .false{condition_label}")
+                            state.append(f":")
+                        case "!cz": # a > x
+                            state.append(f"  jr c, .false{condition_label}")
                             state.append(f"  jr z, .false{condition_label}")
                         case _:
                             raise ParseError(node.token, f"Internal compiler error: {condition_result} {node}")
@@ -167,12 +197,28 @@ class CodeGen:
                 state.append(f"  rla ; clear zero flag")
                 state.append(f": ; z set if item found")
                 return "z"
+        elif node.kind in {"<", ">", "<=", ">=", "==", "!="}:
+            left_reg = self._compile_value(state, node.params[0])
+            assert left_reg == "a"
+            if node.params[1].is_number():
+                state.append(f"  cp a, {node.params[1].get_number()}")
+                return COMPARE_RESULT_LR[node.kind]
+            else:
+                state.append(f"  ld d, a")
+                right_reg = self._compile_value(state, node.params[1])
+                assert right_reg == "a"
+                state.append(f"  cp a, d")
+                return COMPARE_RESULT_RL[node.kind]
         raise ParseError(node.token, f"Do not know how to compile: {node}")
 
     def _compile_value(self, state, node):
         if node.kind == "value" and node.token.kind == "NUMBER":
             state.append(f"  ld a, {node.token.value}")
             return "a"
+        if node.kind == "value" and node.token.kind == "ID":
+            if node.token.value in CONSTANTS:
+                state.append(f"  ld a, [{CONSTANTS[node.token.value]}]")
+                return "a"
         raise ParseError(node.token, f"Do not know how to compile: {node}")
 
     def _compile_address(self, state, node):

@@ -64,12 +64,10 @@ class NPC:
 
 if __name__ == "__main__":
     import sys, os
-    import codegen
+    from . import codegen
     for arg in sys.argv[1:]:
         try:
             npc = NPC(arg)
-            # for node in npc.oninteraction:
-            #     node.dump()
             codegen.CodeGen(npc, sys.stdout)
         except tokenizer.ParseError as e:
             print(f"Error: {e.message}")
