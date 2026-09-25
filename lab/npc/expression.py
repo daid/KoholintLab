@@ -140,10 +140,10 @@ def compile_condition(context, state, node):
             left_reg.release()
             return COMPARE_RESULT_LR[node.kind]
         else:
-            state.append(f"  ld d, a")
+            context.free_up("a")
             right_reg = compile_value(context, state, node.params[1])
             assert right_reg == "a"
-            state.append(f"  cp a, d")
+            state.append(f"  cp a, {left_reg}")
             left_reg.release()
             right_reg.release()
             return COMPARE_RESULT_RL[node.kind]
