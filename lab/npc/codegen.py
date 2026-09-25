@@ -1,32 +1,8 @@
 from .tokenizer import ParseError
 from . import func
 from . import annotations
+from . import expression
 import json
-
-
-CONSTANTS = {
-    "swordLevel": "wSwordLevel",
-    "shieldLevel": "wShieldLevel",
-    "linkX": "hLinkPositionX",
-    "linkY": "hLinkPositionY"
-}
-
-COMPARE_RESULT_LR = { # Which flags result in a "true" result on "cp L, R"
-    "==": "z",
-    "!=": "!z",
-    "<": "c",
-    ">": "!cz",
-    "<=": "cz",
-    ">=": "!c",
-}
-COMPARE_RESULT_RL = { # Which flags result in a "true" result on "cp R, L"
-    "==": "z",
-    "!=": "!z",
-    "<": "!cz",
-    ">": "c",
-    "<=": "!c",
-    ">=": "cz",
-}
 
 
 class EntityState:
@@ -92,13 +68,14 @@ class CodeGen:
             self.output(f"{state.label}:")
             for line in state.code:
                 if isinstance(line, EntityState):
+                    self.output(f"  ; -> {line.label}")
                     if line == state:
                         self.output(f"  ret")
                     elif line.index == state.index + 1:
-                        self.output(f"  jp IncrementEntityState ; {line.label}")
+                        self.output(f"  jp IncrementEntityState")
                     else:
                         self.output(f"  call IncrementEntityState")
-                        self.output(f"  ld   [hl], {line.index} ; {line.label}")
+                        self.output(f"  ld   [hl], {line.index}")
                         self.output(f"  ret")
                 else:
                     self.output(line)
@@ -131,12 +108,18 @@ class CodeGen:
                     if new_state:
                         state = new_state
                 case "=":
-                    result_reg = self._compile_value(state, node.params[1])
-                    result_target = self._compile_address(state, node.params[0])
-                    state.append(f"  ld [{result_target}], {result_reg}")
+                    context = expression.Context(state, node.token)
+                    result_reg = expression.compile_value(context, state, node.params[1])
+                    assert result_reg == "a"
+                    result_target = expression.compile_address(context, state, node.params[0])
+                    if result_target.startswith("h"):
+                        state.append(f"  ldh [{result_target}], {result_reg}")
+                    else:
+                        state.append(f"  ld [{result_target}], {result_reg}")
+                    result_reg.release()
                 case "if":
                     condition_label = state.gen_condition_label()
-                    condition_result = self._compile_condition(state, node.params[0])
+                    condition_result = expression.compile_condition(expression.Context(state, node.token), state, node.params[0])
                     match condition_result: # Turn a "true" condition into a "jump if false"
                         case "z":   # a == x
                             state.append(f"  jr nz, .false{condition_label}")
@@ -177,55 +160,6 @@ class CodeGen:
                 case _:
                     raise ParseError(node.token, f"Do not know how to compile: {node}")
         return state
-
-    def _compile_condition(self, state, node):
-        if node.kind == "!":
-            res = self._compile_condition(state, node.params[0])
-            if res.startswith("!"):
-                return res[1:]
-            return f"!{res}"
-        elif node.kind == "call":
-            if node.params[0].get_identifier() == "hasItem":
-                item_id = node.params[1].get_identifier()
-                state.append(f"  ld hl, wInventoryItems.BButtonSlot")
-                state.append(f"  ld d, INVENTORY_SLOT_COUNT")
-                state.append(f": ld a, [hl+]")
-                state.append(f"  cp {item_id}")
-                state.append(f"  jr z, :+")
-                state.append(f"  dec d")
-                state.append(f"  jr nz, :-")
-                state.append(f"  rla ; clear zero flag")
-                state.append(f": ; z set if item found")
-                return "z"
-        elif node.kind in {"<", ">", "<=", ">=", "==", "!="}:
-            left_reg = self._compile_value(state, node.params[0])
-            assert left_reg == "a"
-            if node.params[1].is_number():
-                state.append(f"  cp a, {node.params[1].get_number()}")
-                return COMPARE_RESULT_LR[node.kind]
-            else:
-                state.append(f"  ld d, a")
-                right_reg = self._compile_value(state, node.params[1])
-                assert right_reg == "a"
-                state.append(f"  cp a, d")
-                return COMPARE_RESULT_RL[node.kind]
-        raise ParseError(node.token, f"Do not know how to compile: {node}")
-
-    def _compile_value(self, state, node):
-        if node.kind == "value" and node.token.kind == "NUMBER":
-            state.append(f"  ld a, {node.token.value}")
-            return "a"
-        if node.kind == "value" and node.token.kind == "ID":
-            if node.token.value in CONSTANTS:
-                state.append(f"  ld a, [{CONSTANTS[node.token.value]}]")
-                return "a"
-        raise ParseError(node.token, f"Do not know how to compile: {node}")
-
-    def _compile_address(self, state, node):
-        if node.kind == "value" and node.token.kind == "ID":
-            if node.token.value in CONSTANTS:
-                return CONSTANTS[node.token.value]
-        raise ParseError(node.token, f"Do not know how to compile: {node}")
 
     def output(self, code):
         self._output_stream.write(code + "\n")
